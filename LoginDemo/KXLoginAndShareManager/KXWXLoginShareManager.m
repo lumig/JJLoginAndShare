@@ -45,10 +45,27 @@
  */
 - (void)wechatLogin
 {
-    SendAuthReq *req = [[SendAuthReq alloc] init];
-    req.scope = @"kx_userinfo";
-    req.state = @"kxWechatLoginShare";
-    [WXApi sendReq:req];
+    if ([self canOpenWechatApp]) {
+        SendAuthReq *req = [[SendAuthReq alloc] init];
+        req.scope = @"kx_userinfo";
+        req.state = @"kxWechatLoginShare";
+        [WXApi sendReq:req];
+    }
+}
+
+//判断是否安装了微信
+- (BOOL)canOpenWechatApp
+{
+    BOOL isCanOpenApp = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"weixin://"]];
+    if (!isCanOpenApp) {
+        //提示用户安装微信
+        NSString *alertStr = @"您没有安装微信,请您先安装微信";
+        UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提示" message:alertStr preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil];
+        [alertVC addAction:sureAction];
+        [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alertVC animated:YES completion:nil];
+    }
+    return isCanOpenApp;
 }
 
 /**
@@ -64,7 +81,7 @@
     req.state = @"kxWechatLoginShare";
     [WXApi sendReq:req];
     
-
+    
     self.loginSuccessBlock = ^(NSDictionary *dict){
         successBlock(dict);
     };
@@ -98,7 +115,15 @@
     WXMediaMessage *message = [WXMediaMessage message];
     message.title = title;
     message.description = desc;
-    [message setThumbImage:[UIImage imageNamed:image]];
+    UIImage *iconImage = nil;
+    if ([image isEqualToString:@"http://"]
+        || [image isEqualToString:@"https://"]) {
+        NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:image]];
+        iconImage = [UIImage imageWithData:data];
+    } else {
+        iconImage = [UIImage imageNamed:image];
+    }
+    [message setThumbImage:iconImage];
     
     WXWebpageObject *videoobject = [WXWebpageObject object];
     videoobject.webpageUrl = url;

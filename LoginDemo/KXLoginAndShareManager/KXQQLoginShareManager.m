@@ -40,8 +40,26 @@
  */
 - (void)qqLogin
 {
-    _permissions =  [NSArray arrayWithObjects:@"get_user_info", @"get_simple_userinfo", @"add_t", nil];
-    [_tencentOAuth authorize:_permissions];
+    if ([self canOpenQQApp]) {
+        _permissions =  [NSArray arrayWithObjects:@"get_user_info", @"get_simple_userinfo", @"add_t", nil];
+        [_tencentOAuth authorize:_permissions];
+    }
+    
+}
+
+//判断是否安装了qq
+- (BOOL)canOpenQQApp
+{
+    BOOL isCanOpenApp = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"mqq://"]];
+    if (!isCanOpenApp) {
+        //提示用户安装微信
+        NSString *alertStr = @"您没有安装QQ,请您先安装QQ!";
+        UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"提示" message:alertStr preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil];
+        [alertVC addAction:sureAction];
+        [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alertVC animated:YES completion:nil];
+    }
+    return isCanOpenApp;
 }
 
 #pragma mark -- TencentSessionDelegate
@@ -54,7 +72,7 @@
     {
         // 获取用户信息
         [_tencentOAuth getUserInfo];
-
+        
     }
     else
     {
@@ -63,7 +81,7 @@
 }
 
 /**
-用户没有登录
+ 用户没有登录
  */
 - (void)tencentDidNotLogin:(BOOL)cancelled
 {
@@ -157,12 +175,12 @@
     if ([image isEqualToString:@"http://"]
         || [image isEqualToString:@"https://"]) {
         newsObj  = [QQApiNewsObject
-           objectWithURL:[NSURL URLWithString:url]
-           title:title
-           description:desc
-           previewImageURL:[NSURL URLWithString:image]];
+                    objectWithURL:[NSURL URLWithString:url]
+                    title:title
+                    description:desc
+                    previewImageURL:[NSURL URLWithString:image]];
     } else {
-//        将UIImage 转为 NSData
+        //        将UIImage 转为 NSData
         UIImage *img = [UIImage imageNamed:image];
         NSData *data = nil;
         if (UIImagePNGRepresentation(img) == nil) {
@@ -178,13 +196,13 @@
                    title:title
                    description:desc previewImageData:data];
     }
- 
+    
     SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:newsObj];
     dispatch_async(dispatch_get_main_queue(), ^{
         //将内容分享到qzone
         QQApiSendResultCode sent = [QQApiInterface SendReqToQZone:req];
     });
-
+    
 }
 
 
