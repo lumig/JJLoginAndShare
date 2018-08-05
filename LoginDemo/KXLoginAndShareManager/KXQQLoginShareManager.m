@@ -131,7 +131,7 @@
     // 否则可以返回YES
 }
 
-- (void)qqSendMessage:(NSString *)message
+- (void)qqSendMessageToFriend:(NSString *)message
 {
     QQApiTextObject *txtObj = [QQApiTextObject objectWithText:message];
     SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:txtObj];
